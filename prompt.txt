@@ -1,0 +1,70 @@
+Create a complete Battleships challenge-mode bot in [LANGUAGE].
+
+## API
+
+Base URL: https://battleships.devrel.hny.wtf/api/v1
+
+All WebSocket messages use: {"messageType": "...", "payload": {...}}
+
+### Registration
+
+POST /api/v1/challenges/{challengeId}/bots          (by ID)
+POST /api/v1/challenges/by-name/{challengeName}/bots (by name)
+Body: {"displayName": "...", "owner": "..."}
+
+URL-encode challengeId and challengeName (may contain spaces).
+
+Response:
+{"registrationId": "reg-...", "challengeBotId": "bot-...", "authToken": "...", "webSocketUrl": "wss://..."}
+
+Save registrationId, authToken, webSocketUrl to .battleships-registration.json. Reuse on subsequent runs — same displayName returns the existing registration.
+
+### WebSocket
+
+Connect to webSocketUrl. The server always runs over TLS — always connect with wss:// regardless of the scheme in webSocketUrl. Strip whatever scheme is present and replace with wss://, e.g. "wss://" + url.split("://")[-1]. Set header: Authorization: Bearer {authToken}. If authToken is non-empty also append ?token={authToken} to the URL as fallback. Never append ?token= with an empty value.
+
+## Message Flow
+
+Connect → CHALLENGE_REGISTERED → repeat per game: PLACE_SHIPS_REQUEST → PLACE_SHIPS_RESPONSE → (FIRE_REQUEST → FIRE_RESPONSE)* → GAME_RESULT → CHALLENGE_COMPLETE → connection closes.
+
+## Message Formats
+
+PLACE_SHIPS_REQUEST payload:
+{"request": {"gameId": "...", "board": {"width":10,"height":10}, "ships": [{"typeId":"CARRIER","length":5}, ...], "rules": {"allowAdjacentShips": false}}}
+
+PLACE_SHIPS_RESPONSE payload:
+{"gameId": "...", "response": {"placements": [{"typeId":"CARRIER","start":{"row":0,"col":0},"orientation":"H"}, ...]}}
+orientation must be exactly "H" or "V" — not "HORIZONTAL" or "VERTICAL".
+placements must be nested inside "response" — do not send them at the top level of payload.
+
+FIRE_REQUEST payload:
+{"request": {"gameId":"...","turnNumber":3,"myBoard":{"cells":[{"row":1,"col":2,"status":"HIT"}]},"opponentView":{"shots":[{"row":0,"col":0,"result":"MISS"},{"row":2,"col":3,"result":"HIT"}]}}}
+
+FIRE_RESPONSE payload:
+{"gameId":"...","response":{"target":{"row":5,"col":7}}}
+
+GAME_RESULT payload:
+{"gameId":"...","opponentDisplayName":"...","isWin":true,"playerHits":17,"opponentHits":12,"points":15,"gameNumber":2,"totalGames":6}
+
+CHALLENGE_COMPLETE payload:
+{"wins":4,"losses":2,"totalPoints":58,"hitDifference":23,"isNewBest":true,"message":"..."}
+
+ERROR payload:
+{"errorCode":"INVALID_PLACEMENT","message":"..."}
+
+## Strategy
+
+Ship placement: place all ships horizontally, leave a gap row between each. Respect allowAdjacentShips from PLACE_SHIPS_REQUEST. Use a hardcoded fallback length map (CARRIER=5, BATTLESHIP=4, CRUISER=3, SUBMARINE=3, DESTROYER=2) in case the "length" field is absent from a ship object — never use ship["length"] directly without a fallback.
+
+Firing: checkerboard sweep (fire cells where row+col is even first). On HIT, enter hunt mode — fire adjacent cells until ship sinks, then resume sweep. Track fired shots via opponentView.shots. Always initialise the firing strategy to a valid default state — never leave it as null/None, so a FIRE_REQUEST can be handled safely even if PLACE_SHIPS_REQUEST was missed.
+
+## Requirements
+
+- Args: --challenge-id OR --challenge-name, --name (required), --owner, --server (default https://battleships.devrel.hny.wtf)
+- Persist credentials to .battleships-registration.json; skip registration if file exists
+- Console output: connection status, per-game result (game X/Y, W/L, points), final summary
+- Handle network errors, auth errors, invalid placements
+- Coordinates 0-based (0–9). Ships: CARRIER=5, BATTLESHIP=4, CRUISER=3, SUBMARINE=3, DESTROYER=2. Timeout: 30s per response.
+- On CHALLENGE_COMPLETE, close the connection and exit — do not reconnect. Only reconnect on unexpected disconnection before the challenge finishes.
+
+Generate complete runnable code with inline comments on key sections.

@@ -23,11 +23,10 @@ By the end of this workshop you'll have **full visibility** into every shot your
 1. Open **Kiro**
 2. Open a new empty folder as your workspace
 3. Open the Kiro agent panel
-4. Go to **[battleships.devrel.hny.wtf/docs/ai-generator?mode=challenge](https://battleships.devrel.hny.wtf/docs/ai-generator?mode=challenge)**
-5. Select your preferred language
-6. Copy the full prompt from the page
-7. Paste it into the Kiro agent panel and hit send
-8. Kiro will generate a working bot — save the file it creates
+4. Open **`prompt.txt`** from this repo (or copy it from the screen at the front)
+5. Replace `[LANGUAGE]` on line 1 with Python
+6. Paste the full prompt into the Kiro agent panel and hit send
+7. Kiro will generate a working bot — save the file(s) it creates
 
 > **Stuck or behind?** Skip to the fallback bot below.
 
@@ -40,25 +39,23 @@ Install dependencies and run your bot:
 **Python example:**
 ```bash
 pip install requests websockets
-python your_bot.py --name "your-name-here"
+python your_bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
 ```
 
-You should see your bot connect and start playing. Check the leaderboard on screen — can you see your bot?
+> The challenge ID is on the front screen. Your credentials are saved automatically after the first run — no need to re-register.
 
-> The workshop challenge ID is on the front screen. Make sure your bot is registered to that challenge.
+You should see your bot connect, play through all games, and print a final score. Check the leaderboard — can you see your name?
 
 ---
 
 ## Fallback bot
 
-If you couldn't generate a bot, use this one instead — it's a solid checkerboard-strategy bot:
-
-**[github.com/gist/LINK-ON-SCREEN]**
+If you couldn't generate a bot, use this one — it's in the same repo you're reading this from:
 
 ```bash
-# Download and run
-pip install requests websockets
-python battleships_bot.py --name "your-name-here"
+# From the repo root
+pip install -r fallback-bot/requirements.txt
+python fallback-bot/battleships_bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
 ```
 
 You'll still do all the telemetry steps — that's the real workshop.
@@ -96,7 +93,7 @@ Paste each prompt into the Kiro agent panel in order.
 
 > **Copy this into Kiro:**
 >
-> *"Add OpenTelemetry tracing to my battleships bot. Use the OTLP HTTP exporter sending to Honeycomb (`https://api.honeycomb.io`) with the API key from the `HONEYCOMB_API_KEY` environment variable and dataset name from `HONEYCOMB_DATASET`. Create a root span for each game session (named `game`) that starts when a PLACE_SHIPS_REQUEST is received and ends when the game completes. Add a child span for each shot fired (named `fire`). Install any required packages."*
+> *"Add OpenTelemetry tracing to my battleships bot. Use the OTLP HTTP exporter sending to Honeycomb (`https://api.honeycomb.io`) with the API key from the `HONEYCOMB_API_KEY` environment variable and dataset name from `HONEYCOMB_DATASET`. Create a root span for each game (named `game`) that starts when a `PLACE_SHIPS_REQUEST` message is received and ends when a `GAME_RESULT` message is received for that game. Add a child span for each shot fired (named `fire`). Install any required packages."*
 
 **After running:** restart your bot and play a game. Go to Honeycomb → you should see traces appearing. Click one — that's a complete game.
 
@@ -112,7 +109,7 @@ Paste each prompt into the Kiro agent panel in order.
 
 > **Copy this into Kiro:**
 >
-> *"On each `fire` span, add the following attributes: `shot.row` (int), `shot.col` (int), `shot.number` (the sequential shot count for this game, starting at 1), `shot.result` (the result string: HIT, MISS, or SUNK if available from the server response or next game update), and `game.id` (the game ID string)."*
+> *"On each `fire` span, add the following attributes: `shot.row` (int), `shot.col` (int), `shot.number` (the sequential shot count for this game, starting at 1), `shot.result` (the result string: HIT, MISS, or SUNK — read from `opponentView.shots` in the next `FIRE_REQUEST` by comparing the previous target coordinates), and `game.id` (the game ID string)."*
 
 **After running:** restart your bot and play a few games.
 
@@ -135,7 +132,7 @@ Query 2 — *What's my hit rate?*
 
 > **Copy this into Kiro:**
 >
-> *"On the `game` root span, add the following attributes when the game completes: `game.result` (COMPLETED or ABANDONED), `game.score` (the final score integer), `game.shots_fired` (total shots taken), `game.hits` (total hits), `game.misses` (total misses), `game.accuracy` (hits divided by shots_fired, as a float). Also add a `game.opponent` attribute with the name of the bot we played against, if available in the game data."*
+> *"On the `game` root span, add the following attributes when the `GAME_RESULT` message is received: `game.result` (WON or LOST, from `isWin`), `game.score` (the `points` integer from GAME_RESULT), `game.shots_fired` (total shots taken that game), `game.hits` (total hits, from `playerHits`), `game.opponent` (the `opponentDisplayName` string), `game.number` (the `gameNumber` int), `game.total` (the `totalGames` int), and `game.accuracy` (hits divided by shots_fired, as a float)."*
 
 **After running:** restart your bot and play 5+ games.
 
