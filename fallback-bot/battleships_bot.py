@@ -353,6 +353,7 @@ class ChallengeBot:
 # ─── Entry point ─────────────────────────────────────────────────────────────
 
 async def main():
+    global SERVER_URL
     parser = argparse.ArgumentParser(description="Battleships Challenge Bot")
     parser.add_argument("--server",         default=SERVER_URL,  help="Server base URL")
     parser.add_argument("--challenge-id",   default=None,        help="Challenge ID")
@@ -364,7 +365,6 @@ async def main():
     if not args.challenge_id and not args.challenge_name:
         parser.error("Provide either --challenge-id or --challenge-name")
 
-    global SERVER_URL
     SERVER_URL = args.server.rstrip("/")
 
     print("Battleships Challenge Bot")

@@ -1,70 +1,124 @@
-Create a complete Battleships challenge-mode bot in [LANGUAGE].
-
-## API
-
-Base URL: https://battleships.devrel.hny.wtf/api/v1
-
-All WebSocket messages use: {"messageType": "...", "payload": {...}}
-
-### Registration
-
-POST /api/v1/challenges/{challengeId}/bots          (by ID)
-POST /api/v1/challenges/by-name/{challengeName}/bots (by name)
-Body: {"displayName": "...", "owner": "..."}
-
-URL-encode challengeId and challengeName (may contain spaces).
-
-Response:
-{"registrationId": "reg-...", "challengeBotId": "bot-...", "authToken": "...", "webSocketUrl": "wss://..."}
-
-Save registrationId, authToken, webSocketUrl to .battleships-registration.json. Reuse on subsequent runs — same displayName returns the existing registration.
-
-### WebSocket
-
-Connect to webSocketUrl. The server always runs over TLS — always connect with wss:// regardless of the scheme in webSocketUrl. Strip whatever scheme is present and replace with wss://, e.g. "wss://" + url.split("://")[-1]. Set header: Authorization: Bearer {authToken}. If authToken is non-empty also append ?token={authToken} to the URL as fallback. Never append ?token= with an empty value.
-
-## Message Flow
-
-Connect → CHALLENGE_REGISTERED → repeat per game: PLACE_SHIPS_REQUEST → PLACE_SHIPS_RESPONSE → (FIRE_REQUEST → FIRE_RESPONSE)* → GAME_RESULT → CHALLENGE_COMPLETE → connection closes.
-
-## Message Formats
-
-PLACE_SHIPS_REQUEST payload:
-{"request": {"gameId": "...", "board": {"width":10,"height":10}, "ships": [{"typeId":"CARRIER","length":5}, ...], "rules": {"allowAdjacentShips": false}}}
-
-PLACE_SHIPS_RESPONSE payload:
-{"gameId": "...", "response": {"placements": [{"typeId":"CARRIER","start":{"row":0,"col":0},"orientation":"H"}, ...]}}
-orientation must be exactly "H" or "V" — not "HORIZONTAL" or "VERTICAL".
-placements must be nested inside "response" — do not send them at the top level of payload.
-
-FIRE_REQUEST payload:
-{"request": {"gameId":"...","turnNumber":3,"myBoard":{"cells":[{"row":1,"col":2,"status":"HIT"}]},"opponentView":{"shots":[{"row":0,"col":0,"result":"MISS"},{"row":2,"col":3,"result":"HIT"}]}}}
-
-FIRE_RESPONSE payload:
-{"gameId":"...","response":{"target":{"row":5,"col":7}}}
-
-GAME_RESULT payload:
-{"gameId":"...","opponentDisplayName":"...","isWin":true,"playerHits":17,"opponentHits":12,"points":15,"gameNumber":2,"totalGames":6}
-
-CHALLENGE_COMPLETE payload:
-{"wins":4,"losses":2,"totalPoints":58,"hitDifference":23,"isNewBest":true,"message":"..."}
-
-ERROR payload:
-{"errorCode":"INVALID_PLACEMENT","message":"..."}
-
-## Strategy
-
-Ship placement: place all ships horizontally, leave a gap row between each. Respect allowAdjacentShips from PLACE_SHIPS_REQUEST. Use a hardcoded fallback length map (CARRIER=5, BATTLESHIP=4, CRUISER=3, SUBMARINE=3, DESTROYER=2) in case the "length" field is absent from a ship object — never use ship["length"] directly without a fallback.
-
-Firing: checkerboard sweep (fire cells where row+col is even first). On HIT, enter hunt mode — fire adjacent cells until ship sinks, then resume sweep. Track fired shots via opponentView.shots. Always initialise the firing strategy to a valid default state — never leave it as null/None, so a FIRE_REQUEST can be handled safely even if PLACE_SHIPS_REQUEST was missed.
-
 ## Requirements
 
-- Args: --challenge-id OR --challenge-name, --name (required), --owner, --server (default https://battleships.devrel.hny.wtf)
-- Persist credentials to .battleships-registration.json; skip registration if file exists
-- Console output: connection status, per-game result (game X/Y, W/L, points), final summary
-- Handle network errors, auth errors, invalid placements
-- Coordinates 0-based (0–9). Ships: CARRIER=5, BATTLESHIP=4, CRUISER=3, SUBMARINE=3, DESTROYER=2. Timeout: 30s per response.
-- On CHALLENGE_COMPLETE, close the connection and exit — do not reconnect. Only reconnect on unexpected disconnection before the challenge finishes.
+### 1. Bot Registration
+As a challenge participant, I want to register my bot with the challenge server so that I can compete in Battleships games.
 
-Generate complete runnable code with inline comments on key sections.
+- WHEN the bot is run AND no `.battleships-registration.json` exists THE SYSTEM SHALL POST to the appropriate registration endpoint and save `registrationId`, `authToken`, and `webSocketUrl` to `.battleships-registration.json`.
+- WHEN `.battleships-registration.json` already exists THE SYSTEM SHALL reuse saved credentials without re-registering.
+- THE SYSTEM SHALL URL-encode `challengeId` and `challengeName` in the endpoint path.
+
+### 2. WebSocket Connection
+- WHEN credentials are available THE SYSTEM SHALL connect to `webSocketUrl` with the scheme replaced by `wss://` regardless of the original scheme.
+- THE SYSTEM SHALL set the `Authorization: Bearer {authToken}` header.
+- WHEN `authToken` is non-empty THE SYSTEM SHALL also append `?token={authToken}` to the URL.
+- THE SYSTEM SHALL NOT append `?token=` when `authToken` is empty.
+
+### 3. Ship Placement
+- WHEN a `PLACE_SHIPS_REQUEST` message is received THE SYSTEM SHALL respond with a valid `PLACE_SHIPS_RESPONSE` placing all ships without overlap and within bounds.
+- THE SYSTEM SHALL place ships horizontally with a gap row between each.
+- THE SYSTEM SHALL respect the `allowAdjacentShips` rule from the request payload.
+- THE SYSTEM SHALL use fallback ship lengths (CARRIER=5, BATTLESHIP=4, CRUISER=3, SUBMARINE=3, DESTROYER=2) when the `length` field is absent from a ship object.
+
+### 4. Firing Strategy
+- WHEN a `FIRE_REQUEST` is received THE SYSTEM SHALL respond with a `FIRE_RESPONSE` targeting an untried cell.
+- THE SYSTEM SHALL use a checkerboard sweep (cells where `row+col` is even first) as the default firing pattern.
+- WHEN a shot results in `HIT` THE SYSTEM SHALL enter hunt mode and fire adjacent cells until the ship sinks.
+- WHEN a ship sinks THE SYSTEM SHALL resume the checkerboard sweep.
+- THE SYSTEM SHALL initialise the firing strategy to a valid default state so a `FIRE_REQUEST` can be handled even if `PLACE_SHIPS_REQUEST` was missed.
+- THE SYSTEM SHALL track fired shots via `opponentView.shots` from the `FIRE_REQUEST` payload to avoid duplicates.
+
+### 5. Game Lifecycle
+- WHEN `CHALLENGE_REGISTERED` is received THE SYSTEM SHALL log successful registration.
+- WHEN `GAME_RESULT` is received THE SYSTEM SHALL log game number, opponent name, win/loss, hits, and points.
+- WHEN `CHALLENGE_COMPLETE` is received THE SYSTEM SHALL log the final summary and close the connection.
+- THE SYSTEM SHALL NOT reconnect after `CHALLENGE_COMPLETE`.
+- WHEN an unexpected disconnection occurs before `CHALLENGE_COMPLETE` THE SYSTEM SHALL attempt to reconnect.
+- WHEN an `ERROR` message is received THE SYSTEM SHALL log the `errorCode` and message.
+
+### 6. CLI Interface
+- THE SYSTEM SHALL accept `--challenge-name` OR `--challenge-id` (at least one required), `--name` (required), `--owner` (optional), and `--server` (optional, default: `https://battleships.devrel.hny.wtf`).
+
+---
+
+## Design
+
+### Architecture
+Single-file async bot. One WebSocket connection per challenge run. Message dispatch via a loop over incoming messages, routing by `messageType`.
+
+### API
+
+**Base URL:** `https://battleships.devrel.hny.wtf/api/v1`
+
+**WebSocket message envelope:**
+```json
+{"messageType": "...", "payload": {...}}
+```
+
+**Registration endpoints:**
+```
+POST /api/v1/challenges/{challengeId}/bots
+POST /api/v1/challenges/by-name/{challengeName}/bots
+Body:     {"displayName": "...", "owner": "..."}
+Response: {"registrationId": "...", "challengeBotId": "...", "authToken": "...", "webSocketUrl": "wss://..."}
+```
+
+**Message flow:**
+```
+Connect → CHALLENGE_REGISTERED → per game: PLACE_SHIPS_REQUEST → PLACE_SHIPS_RESPONSE → (FIRE_REQUEST → FIRE_RESPONSE)* → GAME_RESULT → CHALLENGE_COMPLETE
+```
+
+### Message Payloads
+
+**PLACE_SHIPS_REQUEST:**
+```json
+{"request": {"gameId": "...", "board": {"width":10,"height":10}, "ships": [{"typeId":"CARRIER","length":5}], "rules": {"allowAdjacentShips": false}}}
+```
+
+**PLACE_SHIPS_RESPONSE** — `orientation` must be exactly `"H"` or `"V"`; placements nested inside `"response"`:
+```json
+{"gameId": "...", "response": {"placements": [{"typeId":"CARRIER","start":{"row":0,"col":0},"orientation":"H"}]}}
+```
+
+**FIRE_REQUEST:**
+```json
+{"request": {"gameId":"...","turnNumber":3,"myBoard":{"cells":[{"row":1,"col":2,"status":"HIT"}]},"opponentView":{"shots":[{"row":0,"col":0,"result":"MISS"}]}}}
+```
+
+**FIRE_RESPONSE:**
+```json
+{"gameId":"...","response":{"target":{"row":5,"col":7}}}
+```
+
+**GAME_RESULT:**
+```json
+{"gameId":"...","opponentDisplayName":"...","isWin":true,"playerHits":17,"opponentHits":12,"points":15,"gameNumber":2,"totalGames":6}
+```
+
+**CHALLENGE_COMPLETE:**
+```json
+{"wins":4,"losses":2,"totalPoints":58,"hitDifference":23,"isNewBest":true,"message":"..."}
+```
+
+**ERROR:**
+```json
+{"errorCode":"INVALID_PLACEMENT","message":"..."}
+```
+
+### Constraints
+- Coordinates are 0-based (0–9)
+- Response timeout: 30 seconds
+- Ship fallback lengths: CARRIER=5, BATTLESHIP=4, CRUISER=3, SUBMARINE=3, DESTROYER=2
+- Python: declare `global SERVER_URL` at the top of `main()`, before argparse references it as a default value — otherwise Python raises a SyntaxError for using the name prior to the global declaration
+
+---
+
+## Tasks
+
+- [ ] 1. Implement CLI argument parsing (`--challenge-id`/`--challenge-name`, `--name`, `--owner`, `--server`) with validation that at least one of `challenge-id`/`challenge-name` is provided
+- [ ] 2. Implement bot registration with POST to the appropriate endpoint and credential persistence to `.battleships-registration.json`; load and reuse on subsequent runs
+- [ ] 3. Implement WebSocket connection: normalize URL to `wss://`, set `Authorization` header, append `?token=` only when `authToken` is non-empty
+- [ ] 4. Implement ship placement: horizontal placement with gap rows, `allowAdjacentShips` support, fallback length map
+- [ ] 5. Implement firing strategy: checkerboard sweep initialised at startup, hunt mode on `HIT`, resume sweep on ship sink, deduplicate via `opponentView.shots`
+- [ ] 6. Implement message dispatch loop routing `CHALLENGE_REGISTERED`, `PLACE_SHIPS_REQUEST`, `FIRE_REQUEST`, `GAME_RESULT`, `CHALLENGE_COMPLETE`, and `ERROR` by `messageType`
+- [ ] 7. Implement logging: connection status, per-game result (game X/Y, opponent, W/L, hits, points), final challenge summary
+- [ ] 8. Implement error handling: network errors, auth errors, unexpected disconnection with reconnect, invalid placement errors
