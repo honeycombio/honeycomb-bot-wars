@@ -20,26 +20,35 @@ By the end of this workshop you'll have **full visibility** into every shot your
 
 ## Step 1 — Generate your bot with Kiro (8 min)
 
-1. Open **Kiro**
+1. Open **[Kiro IDE](kiro.dev)**
 2. Open a new empty folder as your workspace
 3. Open the Kiro agent panel
 4. Open **`prompt.txt`** from this repo (or copy it from the screen at the front)
-5. Replace `[LANGUAGE]` on line 1 with Python
-6. Paste the full prompt into the Kiro agent panel and hit send
-7. Kiro will generate a working bot — save the file(s) it creates
+5. Paste the full prompt into the Kiro agent panel on the secondary side bar and select 'Vibe' mode and paste the prompt text. If Kiro ask you to use Spec mode, just answer No for this example.
+6. Kiro will generate a bot for the Battleships fights
 
 > **Stuck or behind?** Skip to the fallback bot below.
 
 ---
 
 ## Step 2 — Run your bot (3 min)
+Make sure you have Python installed on your computer where you'll be running the bot:
+https://www.python.org/downloads/
 
-Install dependencies and run your bot:
+Install dependencies and run your bot from its directory:
 
-**Python example:**
+**Python example for macOS/Linux:**
 ```bash
-pip install requests websockets
-python your_bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
+source venv/bin/activate #if using python virtual environment
+pip install -r requirements.txt
+python bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
+```
+
+**Python example for Windows:**
+```bash
+<VENV-DIR>\Scripts\activate.bat #if using python virtual environment
+pip install -r requirements.txt
+python bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
 ```
 
 > The challenge ID is on the front screen. Your credentials are saved automatically after the first run — no need to re-register.
@@ -66,7 +75,7 @@ You'll still do all the telemetry steps — that's the real workshop.
 
 1. Log in to **[honeycomb.io](https://honeycomb.io)**
 2. From the home screen, grab your **API key** (Account → API Keys)
-3. In Kiro, set an environment variable:
+3. In Kiro terminal, set an environment variable:
 
 ```bash
 export HONEYCOMB_API_KEY="your-key-here"
@@ -84,8 +93,11 @@ HONEYCOMB_DATASET=battleships
 ## Step 4 — Add telemetry with Kiro (15 min)
 
 You'll run three prompts in Kiro. Each one adds a layer of visibility.
-
 Paste each prompt into the Kiro agent panel in order.
+All prompts are in this repo numbered.
+Prompt 1 is in the file [01-add-tracing.md](01-add-tracing.md)
+Prompt 2 is in the file [02-span-attributes.md](02-span-attributes.md)
+Prompt 3 is in the file [03-span-attributes-2.md](03-span-attributes-2.md)
 
 ---
 

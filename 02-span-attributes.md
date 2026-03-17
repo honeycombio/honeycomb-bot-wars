@@ -9,14 +9,14 @@
 **Honeycomb queries to run:**
 
 Query 1 — *Where am I wasting shots?*
-- Visualise: `COUNT`
-- Filter: `name = fire` AND `shot.result = MISS`
-- Group by: `shot.row`, `shot.col`
+- SELECT: `COUNT`
+- WHERE: `name = fire` AND `shot.result = MISS`
+- GROUP BY: `shot.row`, `shot.col`
 - → See which board zones you miss most
 
 Query 2 — *What's my hit rate?*
-- Visualise: `COUNT`
-- Group by: `shot.result`
+- SELECT: `COUNT`
+- GROUP BY: `shot.result`
 - → See your overall hit/miss/sunk breakdown
 
 ---

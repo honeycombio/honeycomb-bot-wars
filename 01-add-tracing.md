@@ -7,7 +7,7 @@
 **After running:** restart your bot and play a game. Go to Honeycomb → you should see traces appearing. Click one — that's a complete game.
 
 **Honeycomb query to run:**
-- Dataset: `battleships`
-- Visualise: `COUNT`
-- Group by: `name`
+- DATASET: `battleships`
+- SELECT: `COUNT`
+- GROUP BY: `name`
 - You should see `game` and `fire` events
