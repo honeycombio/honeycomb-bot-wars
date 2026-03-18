@@ -8,6 +8,6 @@
 
 **Honeycomb query to run:**
 - DATASET: `battleships`
-- SELECT: `COUNT`
+- VISUALIZE: `COUNT`
 - GROUP BY: `name`
 - You should see `game` and `fire` events
