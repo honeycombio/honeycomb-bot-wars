@@ -6,6 +6,9 @@
 
 ## The Story
 
+Follow along with the presentation: [Link](https://docs.google.com/presentation/d/1vHQj98TZ19wYOFcvaLaVzoPv6GslIJ1FhgU4s6CKfJU/edit?slide=id.g3c5db9c1b4c_3_11#slide=id.g3c5db9c1b4c_3_11)
+
+
 Your bot is about to go to war — but right now it's flying blind. It fires shots, wins or loses, and you have no idea why.
 
 By the end of this workshop you'll have **full visibility** into every shot your bot fires, every hit it scores, and every pattern in how your enemies attack you. That data is your weapon.
@@ -41,14 +44,14 @@ Install dependencies and run your bot from its directory:
 ```bash
 source venv/bin/activate #if using python virtual environment
 pip install -r requirements.txt
-python bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
+python bot.py --challenge-name "CHALLENGE-NAME-ON-SCREEN" --name "your-name" --owner "Your Name"
 ```
 
 **Python example for Windows:**
 ```bash
 <VENV-DIR>\Scripts\activate.bat #if using python virtual environment
 pip install -r requirements.txt
-python bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
+python bot.py --challenge-name "CHALLENGE-NAME-ON-SCREEN" --name "your-name" --owner "Your Name"
 ```
 
 > The challenge ID is on the front screen. Your credentials are saved automatically after the first run — no need to re-register.
@@ -64,7 +67,7 @@ If you couldn't generate a bot, use this one — it's in the same repo you're re
 ```bash
 # From the repo root
 pip install -r fallback-bot/requirements.txt
-python fallback-bot/battleships_bot.py --challenge-id "CHALLENGE-ID-ON-SCREEN" --name "your-name" --owner "Your Name"
+python fallback-bot/battleships_bot.py --challenge-name "CHALLENGE-NAME-ON-SCREEN" --name "your-name" --owner "Your Name"
 ```
 
 You'll still do all the telemetry steps — that's the real workshop.

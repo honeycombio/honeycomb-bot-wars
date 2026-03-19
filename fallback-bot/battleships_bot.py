@@ -9,13 +9,13 @@ Usage:
     pip install -r requirements.txt
 
     # First run — register by challenge ID:
-    python battleships_bot.py --challenge-id "abc-123" --name "your-bot" --owner "Your Name"
+    python battleships_bot.py --challenge-name "abc-123" --name "your-bot" --owner "Your Name"
 
     # Or register by challenge name:
     python battleships_bot.py --challenge-name "Spring Challenge" --name "your-bot" --owner "Your Name"
 
     # Subsequent runs — credentials are saved, just run again:
-    python battleships_bot.py --challenge-id "abc-123" --name "your-bot" --owner "Your Name"
+    python battleships_bot.py --challenge-name "abc-123" --name "your-bot" --owner "Your Name"
 """
 
 import asyncio
@@ -83,7 +83,7 @@ def register_bot(
     elif challenge_name:
         url = f"{SERVER_URL}/api/v1/challenges/by-name/{urllib.parse.quote(challenge_name)}/bots"
     else:
-        raise ValueError("Provide either --challenge-id or --challenge-name")
+        raise ValueError("Provide either --challenge-name or --challenge-name")
 
     print(f"  Registering at {url} ...")
     resp = requests.post(url, json=payload, timeout=10)
@@ -360,14 +360,14 @@ async def main():
     global SERVER_URL
     parser = argparse.ArgumentParser(description="Battleships Challenge Bot")
     parser.add_argument("--server",         default=SERVER_URL,  help="Server base URL")
-    parser.add_argument("--challenge-id",   default=None,        help="Challenge ID")
+    parser.add_argument("--challenge-name",   default=None,        help="Challenge ID")
     parser.add_argument("--challenge-name", default=None,        help="Challenge name (case-sensitive)")
     parser.add_argument("--name",           required=True,       help="Your bot's display name")
     parser.add_argument("--owner",          default="",          help="Your name (owner)")
     args = parser.parse_args()
 
     if not args.challenge_id and not args.challenge_name:
-        parser.error("Provide either --challenge-id or --challenge-name")
+        parser.error("Provide either --challenge-name or --challenge-name")
 
     SERVER_URL = args.server.rstrip("/")
 

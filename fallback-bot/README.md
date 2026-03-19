@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 Register and play by **challenge ID**:
 ```bash
-python battleships_bot.py --challenge-id "YOUR-CHALLENGE-ID" --name "your-bot-name" --owner "Your Name"
+python battleships_bot.py --challenge-name "YOUR-CHALLENGE-NAME" --name "your-bot-name" --owner "Your Name"
 ```
 
 Or by **challenge name**:
@@ -27,7 +27,7 @@ Your credentials are saved to `.battleships-registration.json` automatically. On
 Battleships Challenge Bot
 ────────────────────────────────────────
   Server   : https://battleships.devrel.hny.wtf
-  Challenge: YOUR-CHALLENGE-ID
+  Challenge: YOUR-CHALLENGE-NAME
   Bot name : your-bot-name
   Owner    : Your Name
 ────────────────────────────────────────
@@ -188,7 +188,7 @@ pip install -r requirements.txt
 |---|---|---|
 | `--name` | Yes | Your bot's display name |
 | `--owner` | No | Your name (shown on leaderboard) |
-| `--challenge-id` | One of these | The challenge UUID |
+| `--challenge-name` | One of these | The challenge UUID |
 | `--challenge-name` | One of these | The challenge name (case-sensitive) |
 | `--server` | No | Override the server URL |
 
