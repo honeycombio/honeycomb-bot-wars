@@ -9,11 +9,10 @@
 **Honeycomb queries to run:**
 
 Query 3 — *Am I getting better?*
-- Visualise: `AVG(game.score)`
-- X-axis: `time`
+- SELECT: `AVG(game.score)`
 - → See your score trend over time
 
 Query 4 — *Which opponents am I losing to?*
-- Visualise: `AVG(game.score)`
+- SELECT: `AVG(game.score)`
 - Group by: `game.opponent`
 - → See which bots are destroying you — those are your targets

@@ -20,28 +20,16 @@ Honeycomb is the observability tool you'll use to see inside your bot during the
 
 ---
 
-## 2. Create a free AWS account
-
-You'll use AWS to access **Kiro**, the AI-powered IDE we'll use to build your bot.
-
-1. Go to **[aws.amazon.com](https://aws.amazon.com)** and click **Create an AWS Account**
-2. Follow the signup steps — you'll need a credit card for identity verification, but the free tier won't charge you for what we're doing today
-3. Once your account is active, sign in to the AWS Console
-
-> If you already have an AWS account, you're all set.
-
----
-
 ## 3. Download and install Kiro
 
 Kiro is an AI IDE from AWS. You'll use it to generate your bot and add telemetry.
 
-1. Go to **[kiro.dev](https://kiro.dev)** and download the installer for your OS (Mac/Windows/Linux)
+1. Go to **[Kiro.dev](https://kiro.dev)** and download the installer for your OS (Mac/Windows/Linux)
 2. Install Kiro and open it
-3. Sign in with your AWS account when prompted
+3. Sign in with your e-mail, Github or AWS account when prompted
 4. Confirm you can see the chat/agent panel on the left side
 
-> Kiro is free to use. Make sure it's working before the workshop.
+> Kiro has a free tier with 50 credits available per month. Make sure it's working before the workshop.
 
 ---
 

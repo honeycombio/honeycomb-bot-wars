@@ -1,4 +1,7 @@
+I want to build a bot to fight in Battleships (https://battleships.devrel.hny.wtf/docs/api)
 ## Requirements
+### 0. Programming Language
+Use Python as the programming language and python virtual environment (venv).
 
 ### Libraries
 - THE SYSTEM SHALL use `requests` for all HTTP calls.

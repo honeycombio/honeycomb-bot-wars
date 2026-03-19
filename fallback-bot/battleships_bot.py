@@ -243,11 +243,15 @@ class ChallengeBot:
         print(f"\nConnecting to {connect_url}")
         async with websockets.connect(connect_url, additional_headers=headers) as ws:
             print("WebSocket connected.\n")
-            async for raw in ws:
-                msg = json.loads(raw)
-                should_continue = await self.handle(ws, msg)
-                if not should_continue:
-                    break
+            try:
+                async for raw in ws:
+                    msg = json.loads(raw)
+                    should_continue = await self.handle(ws, msg)
+                    if not should_continue:
+                        break
+            except (websockets.exceptions.ConnectionClosedOK,
+                    websockets.exceptions.ConnectionClosedError):
+                print("Server closed the connection — challenge complete.")
 
     async def handle(self, ws, msg: dict) -> bool:
         """
